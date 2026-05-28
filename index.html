@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EspetoPro — Gestão para Espetinhos</title>
+  <meta name="description" content="Sistema mobile completo para controle de mesas, caixa, estoque e relatórios financeiros em tempo real." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #F26522;
+      --orange-light: #FFF3EC;
+      --orange-dark: #C24E10;
+      --bg: #0C0A09;
+      --bg2: #161210;
+      --bg3: #1E1A17;
+      --surface: #241F1B;
+      --surface2: #2E2822;
+      --border: rgba(242,101,34,0.15);
+      --border2: rgba(255,255,255,0.06);
+      --text: #F5F0EB;
+      --text2: #A89880;
+      --text3: #6B5C4E;
+      --green: #3DB87A;
+      --blue: #5B9BF5;
+      --red: #E55A5A;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(12,10,9,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .nav-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--text2);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--orange);
+      color: #fff !important;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background 0.2s !important;
+    }
+
+    .nav-cta:hover { background: var(--orange-dark) !important; color: #fff !important; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 40px 80px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(242,101,34,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(242,101,34,0.12);
+      border: 1px solid rgba(242,101,34,0.3);
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-tag::before { content: '🍢'; }
+
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(48px, 8vw, 88px);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero-title span {
+      color: var(--orange);
+      position: relative;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text2);
+      max-width: 540px;
+      line-height: 1.65;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 80px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--orange);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1px solid var(--border2);
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-secondary:hover { background: var(--surface2); transform: translateY(-1px); }
+
+    /* ── Screenshots grid ── */
+    .screenshots {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: flex-end;
+      animation: fadeUp 0.6s 0.4s ease both;
+      overflow: hidden;
+      padding: 0 20px;
+    }
+
+    .screen-wrap {
+      position: relative;
+      transition: transform 0.3s;
+    }
+
+    .screen-wrap:hover { transform: translateY(-8px); }
+
+    .screen-wrap img {
+      width: 160px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+      display: block;
+    }
+
+    .screen-wrap:nth-child(2) img,
+    .screen-wrap:nth-child(4) img { width: 180px; }
+
+    .screen-wrap:nth-child(3) img { width: 195px; }
+
+    /* ── Section ── */
+    section {
+      padding: 100px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 17px;
+      color: var(--text2);
+      max-width: 520px;
+      line-height: 1.65;
+      margin-bottom: 56px;
+    }
+
+    /* ── Features grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .feat-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(242,101,34,0.4), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feat-card:hover {
+      border-color: rgba(242,101,34,0.3);
+      transform: translateY(-3px);
+    }
+
+    .feat-card:hover::before { opacity: 1; }
+
+    .feat-icon {
+      width: 44px; height: 44px;
+      background: rgba(242,101,34,0.1);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .feat-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .feat-desc {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    /* ── Tech stack ── */
+    .stack-section {
+      background: var(--bg2);
+      border-top: 1px solid var(--border2);
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .stack-item {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .stack-item:hover { border-color: rgba(242,101,34,0.3); }
+
+    .stack-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      flex-shrink: 0;
+    }
+
+    .stack-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .stack-role {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ── Architecture ── */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 700px) { .arch-grid { grid-template-columns: 1fr; } }
+
+    .arch-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .arch-card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .arch-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(242,101,34,0.12);
+      color: var(--orange);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .arch-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .arch-list li {
+      font-size: 13px;
+      color: var(--text2);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+
+    .arch-list li::before {
+      content: '→';
+      color: var(--orange);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .arch-list code {
+      font-family: 'DM Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      background: rgba(255,255,255,0.05);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* ── Metrics ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--orange);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    /* ── Screenshots detail ── */
+    .screens-detail {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .screen-detail-wrap {
+      position: relative;
+      transition: transform 0.3s;
+    }
+
+    .screen-detail-wrap:hover { transform: translateY(-6px); }
+
+    .screen-detail-wrap img {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--border2);
+      box-shadow: 0 16px 32px rgba(0,0,0,0.4);
+      display: block;
+    }
+
+    .screen-label {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text3);
+      text-align: center;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border2);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .footer-left {
+      font-size: 14px;
+      color: var(--text3);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 14px;
+      color: var(--text2);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--orange); }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border2);
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      section { padding: 70px 20px; }
+      .hero { padding: 100px 20px 60px; }
+      .screenshots { gap: 8px; }
+      .screen-wrap img { width: 110px !important; }
+      .screen-wrap:nth-child(3) img { width: 125px !important; }
+      footer { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">🍢</div>
+      <span class="nav-logo-text">EspetoPro</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Funcionalidades</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#arquitetura">Arquitetura</a></li>
+      <li><a href="#telas">Telas</a></li>
+      <li><a href="https://github.com/seu-usuario/espetopro" target="_blank" class="nav-cta">GitHub →</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-tag">Projeto Mobile · Full Stack</div>
+    <h1 class="hero-title">
+      Gestão para<br><span>Espetinhos</span>
+    </h1>
+    <p class="hero-sub">
+      Sistema mobile completo para controle de mesas, caixa, estoque e relatórios financeiros em tempo real.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/seu-usuario/espetopro" target="_blank" class="btn-primary">
+        Ver no GitHub →
+      </a>
+      <a href="#features" class="btn-secondary">
+        Explorar projeto
+      </a>
+    </div>
+
+    <div class="screenshots">
+      <div class="screen-wrap">
+        <img src="Captura_de_tela_2026-05-27_211129.png" alt="Tela de abertura do caixa" loading="lazy" />
+      </div>
+      <div class="screen-wrap">
+        <img src="Captura_de_tela_2026-05-27_211310.png" alt="Tela home" loading="lazy" />
+      </div>
+      <div class="screen-wrap">
+        <img src="Captura_de_tela_2026-05-27_211538.png" alt="Log de vendas" loading="lazy" />
+      </div>
+      <div class="screen-wrap">
+        <img src="Captura_de_tela_2026-05-27_211602.png" alt="Relatório financeiro" loading="lazy" />
+      </div>
+      <div class="screen-wrap">
+        <img src="Captura_de_tela_2026-05-27_211330.png" alt="Tela de mesas" loading="lazy" />
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Métricas -->
+  <section>
+    <div class="metrics-row fade-in">
+      <div class="metric-card">
+        <div class="metric-val">8</div>
+        <div class="metric-label">Telas desenvolvidas</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">15+</div>
+        <div class="metric-label">Rotas de API</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">7</div>
+        <div class="metric-label">Models no banco</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val">100%</div>
+        <div class="metric-label">TypeScript no frontend</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="fade-in">
+      <span class="section-label">Funcionalidades</span>
+      <h2 class="section-title">Tudo que um espetinho precisa</h2>
+      <p class="section-sub">Desenvolvido para o contexto real — sem internet estável, operadores não técnicos, ritmo acelerado.</p>
+    </div>
+
+    <div class="features-grid fade-in">
+      <div class="feat-card">
+        <div class="feat-icon">🪑</div>
+        <div class="feat-title">Gestão de mesas</div>
+        <div class="feat-desc">Abertura, adição de produtos e fechamento com snapshot imutável. Histórico preservado mesmo após reaberturas.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-title">Venda avulsa</div>
+        <div class="feat-desc">Registro rápido sem identificação de mesa. Vinculado ao turno de abertura do caixa automaticamente.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">💰</div>
+        <div class="feat-title">Controle de caixa</div>
+        <div class="feat-desc">Abertura com snapshot de estoque, fechamento com custos operacionais e cálculo automático de lucro.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <div class="feat-title">Relatório financeiro</div>
+        <div class="feat-desc">Receita, CMV, lucro bruto e líquido por turno. Combina vendas de mesa e avulsas em um único relatório.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📦</div>
+        <div class="feat-title">Estoque inteligente</div>
+        <div class="feat-desc">Desconto automático ao vender. Devolução ao reabrir mesa. Alertas de estoque mínimo e zerado.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📡</div>
+        <div class="feat-title">Log ao vivo</div>
+        <div class="feat-desc">Vendas atualizadas em tempo real com polling a cada 10 segundos. Vinculado à abertura ativa do caixa.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Stack -->
+  <div class="stack-section">
+    <section id="stack">
+      <div class="fade-in">
+        <span class="section-label">Stack Técnica</span>
+        <h2 class="section-title">Tecnologias utilizadas</h2>
+        <p class="section-sub">Frontend mobile, backend REST e banco relacional — tudo em produção no Render e EAS Build.</p>
+      </div>
+
+      <div class="stack-grid fade-in">
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">React Native + Expo</div>
+            <div class="stack-role">Frontend mobile</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">TypeScript</div>
+            <div class="stack-role">Tipagem estática no frontend</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">Node.js + Express</div>
+            <div class="stack-role">Backend REST API</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">PostgreSQL</div>
+            <div class="stack-role">Banco de dados relacional</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">Prisma ORM</div>
+            <div class="stack-role">Queries tipadas + migrations</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">Expo Router</div>
+            <div class="stack-role">Navegação baseada em arquivos</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">EAS Build</div>
+            <div class="stack-role">Geração do APK na nuvem</div>
+          </div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot"></div>
+          <div>
+            <div class="stack-name">Render</div>
+            <div class="stack-role">Deploy backend + banco</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Arquitetura -->
+  <section id="arquitetura">
+    <div class="fade-in">
+      <span class="section-label">Arquitetura</span>
+      <h2 class="section-title">Decisões técnicas</h2>
+      <p class="section-sub">Problemas reais exigem soluções pensadas. Alguns dos desafios e como foram resolvidos.</p>
+    </div>
+
+    <div class="arch-grid fade-in">
+      <div class="arch-card">
+        <div class="arch-card-title">
+          Histórico imutável
+          <span class="arch-tag">Integridade</span>
+        </div>
+        <ul class="arch-list">
+          <li>Ao fechar uma mesa, um <code>RegistroVendaMesa</code> é criado via <code>$transaction</code></li>
+          <li>Mesmo que a mesa seja reaberta e limpa, o dado financeiro permanece</li>
+          <li>O relatório lê <code>RegistroVendaMesa</code> + <code>ItemVendaAvulsa</code> por <code>aberturaCaixaId</code></li>
+          <li>Elimina dupla contagem e dados órfãos</li>
+        </ul>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-title">
+          Estoque em tempo real
+          <span class="arch-tag">Consistência</span>
+        </div>
+        <ul class="arch-list">
+          <li>Desconto ao adicionar produto na mesa via <code>POST /mesas/:id/produtos</code></li>
+          <li>Devolução ao remover item ou reabrir mesa</li>
+          <li>Verificação de estoque antes de qualquer alteração</li>
+          <li>Tudo dentro de uma única <code>$transaction</code> do Prisma</li>
+        </ul>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-title">
+          Relatório financeiro
+          <span class="arch-tag">Precisão</span>
+        </div>
+        <ul class="arch-list">
+          <li>Receita = soma de <code>RegistroVendaMesa.subtotal</code> + <code>ItemVendaAvulsa</code></li>
+          <li>CMV calculado pelo custo unitário no momento da venda</li>
+          <li>Custos operacionais incluem carvão, gás e funcionários</li>
+          <li>Lucro líquido = Lucro bruto − custos operacionais</li>
+        </ul>
+      </div>
+      <div class="arch-card">
+        <div class="arch-card-title">
+          Log ao vivo
+          <span class="arch-tag">Tempo real</span>
+        </div>
+        <ul class="arch-list">
+          <li>Polling a cada 10 segundos com <code>setInterval</code></li>
+          <li>Vinculado ao <code>useFocusEffect</code> — para ao sair da tela</li>
+          <li>Verifica abertura ativa antes de buscar o log</li>
+          <li>Badge "Ao vivo" com horário da última atualização</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Screenshots -->
+  <section id="telas">
+    <div class="fade-in">
+      <span class="section-label">Telas</span>
+      <h2 class="section-title">O app em funcionamento</h2>
+      <p class="section-sub">Todas as telas desenvolvidas e em produção no APK Android.</p>
+    </div>
+
+    <div class="screens-detail fade-in">
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211129.png" alt="Abertura do caixa" loading="lazy" />
+        <div class="screen-label">Abertura do caixa</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211310.png" alt="Home / Dashboard" loading="lazy" />
+        <div class="screen-label">Home / Dashboard</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211330.png" alt="Gestão de mesas" loading="lazy" />
+        <div class="screen-label">Gestão de mesas</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211351.png" alt="Estoque" loading="lazy" />
+        <div class="screen-label">Estoque</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211456.png" alt="Venda avulsa" loading="lazy" />
+        <div class="screen-label">Venda avulsa</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211517.png" alt="Histórico" loading="lazy" />
+        <div class="screen-label">Histórico de caixas</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211538.png" alt="Log de vendas" loading="lazy" />
+        <div class="screen-label">Log ao vivo</div>
+      </div>
+      <div class="screen-detail-wrap">
+        <img src="Captura_de_tela_2026-05-27_211602.png" alt="Relatório financeiro" loading="lazy" />
+        <div class="screen-label">Relatório financeiro</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div class="divider"></div>
+  <footer>
+    <div class="footer-left">
+      Desenvolvido por <strong style="color:var(--text)">Matheus</strong> · 2026
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/seu-usuario/espetopro" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/seu-usuario" target="_blank">LinkedIn</a>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
